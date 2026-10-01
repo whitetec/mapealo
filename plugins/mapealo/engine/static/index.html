@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>jarvis-map</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="loading">Cargando...</div>
+
+<header>
+  <div class="header-top">
+    <h1 id="app-title">jarvis-map</h1>
+    <span id="app-subtitle">seleccioná una app</span>
+    <span id="stale-banner">
+      mapa desactualizado
+      <button class="btn-regen primary" id="btn-regen-app" type="button">Regenerar</button>
+    </span>
+  </div>
+  <nav id="view-tabs" class="hidden">
+    <button class="view-tab"   data-view="estructura">Estructura</button>
+    <button class="view-tab"   data-view="secciones">Secciones</button>
+    <button class="view-tab"   data-view="arquitectura">Arquitectura</button>
+    <button class="view-tab"   data-view="modelo_datos"  disabled title="próximamente">Modelo de datos</button>
+    <button class="view-tab"   data-view="integraciones" disabled title="próximamente">Integraciones</button>
+    <button class="view-tab"   data-view="diseño"        disabled title="próximamente">Diseño</button>
+    <button class="view-tab"   data-view="flujo"         disabled title="próximamente">Flujo</button>
+  </nav>
+  <nav id="breadcrumb"></nav>
+</header>
+
+<div id="app-select" class="hidden">
+  <h2>Aplicaciones disponibles</h2>
+  <div class="app-grid" id="app-grid"></div>
+  <div id="error-msg"></div>
+</div>
+
+<div id="canvas" class="hidden">
+  <div id="est-controls" class="hidden">
+    <label><input type="checkbox" id="est-show-edges"> imports</label>
+    <button type="button" id="est-expand">desplegar todo</button>
+  </div>
+  <svg id="main-svg"></svg>
+</div>
+
+<div id="panel">
+  <button id="panel-close">✕</button>
+  <h2 id="panel-title"></h2>
+  <p id="panel-desc"></p>
+  <div id="panel-body"></div>
+</div>
+
+<p class="hint" id="hint" style="display:none">hover para enfocar · click para detalle · scroll zoom · arrastrar</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "mapealo",
+  "description": "Mapa de arquitectura de un proyecto, o del ecosistema de agentes de la máquina, en un visualizador local. Autodetecta el stack y la estructura: no hay nada que configurar.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Juan Pablo Ares T."
+  },
+  "keywords": ["arquitectura", "visualizacion", "grafo", "agentes", "skills", "mcp"]
+}

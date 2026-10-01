@@ -1,0 +1,2 @@
+TOOL_VERSION = "1.4"
+MAP_SCHEMA   = "1.1"
