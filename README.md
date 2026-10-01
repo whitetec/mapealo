@@ -14,7 +14,7 @@ Todo se autodetecta. No hay rutas que configurar.
 ## Instalación
 
 ```
-/plugin marketplace add <url-de-este-repo>
+/plugin marketplace add whitetec/mapealo
 /plugin install mapealo@mapealo
 ```
 
