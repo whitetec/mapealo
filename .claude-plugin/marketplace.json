@@ -9,6 +9,7 @@
     {
       "name": "mapealo",
       "source": "./plugins/mapealo",
+      "homepage": "https://github.com/whitetec/mapealo",
       "description": "Genera y abre el mapa de arquitectura de un proyecto (Python, Next.js, WordPress) o del ecosistema de agentes de la máquina (agentes, skills, comandos, plugins, MCP y hooks).",
       "category": "development"
     }

@@ -87,3 +87,7 @@ manda nada a ningún servicio. El visualizador escucha solo en `127.0.0.1`.
 - Python 3.10 o más nuevo
 - `fastapi` y `uvicorn`, solo para el visualizador
 - Linux o macOS (en Windows anda bajo WSL)
+
+## Licencia
+
+MIT. Ver [LICENSE](LICENSE).
