@@ -12,8 +12,9 @@ from pathlib import Path
 
 from _fx import write_app  # noqa: F401  (asegura jarvis-map en sys.path)
 
-from analyzer.jarvis_agents import discovery, _generate_auto
-from analyzer.jarvis_agents.discovery import (
+from analyzer import KIND_AGENTS, normalize_kind
+from analyzer.agents import discovery, _generate_auto
+from analyzer.agents.discovery import (
     P_AGENT, P_COMMAND, P_HOOK, P_MCP, P_PLUGIN, P_SKILL,
 )
 
@@ -304,6 +305,21 @@ class TestPipelineAuto(_EcoFixture):
         _, detail, _, n = _generate_auto("basico", "Eco", [ficha])
         self.assertEqual(n, 1)
         self.assertNotIn("agente-fantasma", detail)
+
+
+class TestKindLegacy(_EcoFixture):
+
+    def test_el_kind_viejo_sigue_resolviendo(self):
+        """Los `mapealo.json` y `meta.json` ya escritos dicen `jarvis-agents`."""
+        self.assertEqual(normalize_kind("jarvis-agents"), KIND_AGENTS)
+        self.assertEqual(normalize_kind(KIND_AGENTS), KIND_AGENTS)
+        self.assertEqual(normalize_kind("python"), "python")
+
+    def test_detect_kind_normaliza_el_config_viejo(self):
+        from analyzer import detect_kind
+        proy = self.tmp / "proy"
+        _w(proy / "jarvis-map.json", json.dumps({"kind": "jarvis-agents"}))
+        self.assertEqual(detect_kind(proy), KIND_AGENTS)
 
 
 if __name__ == "__main__":

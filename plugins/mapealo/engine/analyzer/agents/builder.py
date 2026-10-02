@@ -1,4 +1,4 @@
-"""Construye graph.json para el ecosistema de agentes Jarvis."""
+"""Construye graph.json para un ecosistema de agentes."""
 import math
 
 from analyzer.builder import GROUP_ROOT

@@ -1,13 +1,13 @@
 """Resolución portable de las raíces de proyectos mapeables.
 
-jarvis-map nació asumiendo `~/jarvis-apps/apps/<app_id>`. Para que el tool
+El motor nació asumiendo una única raíz de proyectos. Para que corra
 corra en una máquina ajena, esa raíz se descubre en vez de asumirse. Orden de
 precedencia, de más explícito a más heurístico:
 
-  1. `JARVIS_MAP_APPS_DIR`  — lista separada por `os.pathsep`
-  2. `~/.config/jarvis-map/config.json` → `apps_dirs: []`
+  1. `MAPEALO_APPS_DIR`  — lista separada por `os.pathsep`
+  2. `~/.config/mapealo/config.json` → `apps_dirs: []`
   3. autodetección sobre nombres de raíz frecuentes bajo el home
-  4. el workspace propio del tool (`~/.local/share/jarvis-map/apps`)
+  4. el workspace propio del tool (`~/.local/share/mapealo/apps`)
 
 Un `app_id` que además sea una ruta existente (absoluta, relativa o con `~`)
 se usa tal cual: es el camino portable cuando no hay ninguna raíz reconocible.
@@ -17,14 +17,54 @@ import os
 import re
 from pathlib import Path
 
-ENV_ROOTS = "JARVIS_MAP_APPS_DIR"
+# Nombres del producto. El motor nació dentro de un sistema de agentes propio y
+# se llamaba `jarvis-map`; el producto publicado se llama `mapealo`. Todo lo que
+# el usuario ve usa el nombre nuevo, y lo viejo se sigue leyendo para no
+# invalidar los mapas y configs ya generados.
+ENV_ROOTS        = "MAPEALO_APPS_DIR"
+ENV_ROOTS_LEGACY = "JARVIS_MAP_APPS_DIR"
+
+OUT_DIR          = ".mapealo"
+OUT_DIR_LEGACY   = ".jarvis-map"
+
+PROJECT_CONFIG        = "mapealo.json"
+PROJECT_CONFIG_LEGACY = "jarvis-map.json"
+
+LOG_FILE = "/tmp/mapealo.log"
+
+
+def out_dir(app_dir: Path) -> Path:
+    """Directorio donde vive el mapa de `app_dir`.
+
+    Un proyecto ya mapeado con el nombre viejo lo conserva: renombrarlo al
+    regenerar dejaría dos mapas del mismo proyecto, y el layout manual que el
+    usuario acomodó vive ahí adentro.
+    """
+    nuevo = app_dir / OUT_DIR
+    if nuevo.exists():
+        return nuevo
+    viejo = app_dir / OUT_DIR_LEGACY
+    return viejo if viejo.exists() else nuevo
+
+
+def project_config(app_dir: Path) -> Path | None:
+    """`<proyecto>/mapealo.json`, o el nombre viejo si es el que está."""
+    for name in (PROJECT_CONFIG, PROJECT_CONFIG_LEGACY):
+        f = app_dir / name
+        if f.is_file():
+            return f
+    return None
 
 
 def user_config() -> Path:
     """Config de usuario. Función y no constante: resolverla al importar la
     congela contra el `HOME` del momento."""
-    base = os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config")
-    return Path(base) / "jarvis-map/config.json"
+    base = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
+    nuevo = base / "mapealo/config.json"
+    if nuevo.is_file():
+        return nuevo
+    viejo = base / "jarvis-map/config.json"
+    return viejo if viejo.is_file() else nuevo
 
 # Raíces de desarrollo frecuentes, relativas al home, en orden de preferencia.
 _CANDIDATE_ROOTS = [
@@ -49,13 +89,16 @@ SKIP_NAMES = {"node_modules", "__pycache__", ".git", ".venv", "venv", "dist", "b
 def workspace_root() -> Path:
     """Raíz escribible propia del tool. Aloja stubs que el tool mismo genera
     (por ejemplo el del ecosistema de agentes autodetectado)."""
-    return Path(
-        os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share")
-    ) / "jarvis-map/apps"
+    base = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share"))
+    nuevo = base / "mapealo/apps"
+    if nuevo.is_dir():
+        return nuevo
+    viejo = base / "jarvis-map/apps"
+    return viejo if viejo.is_dir() else nuevo
 
 
 def _from_env() -> list[Path]:
-    raw = os.environ.get(ENV_ROOTS, "").strip()
+    raw = (os.environ.get(ENV_ROOTS) or os.environ.get(ENV_ROOTS_LEGACY) or "").strip()
     if not raw:
         return []
     return [Path(p).expanduser() for p in raw.split(os.pathsep) if p.strip()]
@@ -138,7 +181,7 @@ def resolve_app_dir(app_id: str) -> Path | None:
     """Devuelve el directorio del proyecto, o None si no se encontró.
 
     No resolvemos el path final a propósito: romper symlinks legítimos
-    (`orus -> /media/op/Container/orus`) cambiaría el `.jarvis-map/` de lugar.
+    (un symlink a otro disco) cambiaría el directorio del mapa de lugar.
     """
     direct = _as_path(app_id)
     if direct is not None:

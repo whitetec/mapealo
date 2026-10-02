@@ -96,7 +96,7 @@ def assign_pillar(module_id: str, rel_path: str = "") -> str:
 
 
 _SKIP_DIRS = {"test", "tests", "migration", "migrations", "__pycache__",
-              "venv", ".venv", "env", "node_modules", ".jarvis-map",
+              "venv", ".venv", "env", "node_modules", ".mapealo", ".jarvis-map",
               ".git", ".tox", "dist", "build", ".mypy_cache", ".pytest_cache"}
 
 

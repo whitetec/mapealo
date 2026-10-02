@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-jarvis-mapealo — genera o actualiza el mapa de una app.
+mapealo — genera o actualiza el mapa de un proyecto.
 
 Uso:
   python3 mapealo.py <app_id> [--depth basico|profundo] [--force]
@@ -14,14 +14,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Asegurar que el directorio de jarvis-map esté en sys.path para imports locales
+# Asegurar que el directorio del motor esté en sys.path para imports locales
 _JMAP_ROOT = os.path.dirname(os.path.abspath(__file__))
 if _JMAP_ROOT not in sys.path:
     sys.path.insert(0, _JMAP_ROOT)
 
 from analyzer            import (
-    KIND_PYTHON, KIND_WORDPRESS, KIND_WORDPRESS_REMOTE, KIND_JARVIS_AGENTS, KIND_NEXTJS, load_config,
-    VALID_KINDS, detect_kind,
+    KIND_PYTHON, KIND_WORDPRESS, KIND_WORDPRESS_REMOTE, KIND_AGENTS, KIND_NEXTJS, load_config,
+    VALID_KINDS, detect_kind, normalize_kind,
 )
 from analyzer.artifacts   import detect_artifacts
 from analyzer.basic       import analyze_file
@@ -39,7 +39,6 @@ from version import MAP_SCHEMA, TOOL_VERSION
 
 import paths
 
-JMAP         = ".jarvis-map"
 _APP_ID_RE   = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$')
 _HEADING_RE  = re.compile(r'^# (.+)$', re.MULTILINE)
 _CL_DATE_RE  = re.compile(r'###?\s*(\d{4}-\d{2}-\d{2})')
@@ -67,7 +66,7 @@ convenciones de Claude Code (`.claude/agents`, `skills`, `commands`,
 `plugins`, MCP, hooks y los directorios con `CLAUDE.md`).
 
 Este directorio no es código: lo genera `mapealo.py` para alojar el
-`.jarvis-map/` del mapa. La fuente real vive en `~/.claude/` y en cada
+`.mapealo/` del mapa. La fuente real vive en `~/.claude/` y en cada
 proyecto.
 """
 
@@ -75,16 +74,16 @@ proyecto.
 def _bootstrap_agents_stub(app_id: str) -> Path:
     """Crea el stub que aloja el mapa del ecosistema autodetectado.
 
-    El kind `jarvis-agents` mapea algo que no vive en un directorio propio, así
-    que necesita un lugar escribible donde dejar el `.jarvis-map/`. Sin esto, la
+    El kind `agents` mapea algo que no vive en un directorio propio, así que
+    necesita un lugar escribible donde dejar el `.mapealo/`. Sin esto, la
     única forma de pedir el mapa de agentes era crear el stub a mano.
     """
     d = paths.workspace_root() / app_id
     d.mkdir(parents=True, exist_ok=True)
-    cfg = d / "jarvis-map.json"
+    cfg = d / paths.PROJECT_CONFIG
     if not cfg.exists():
         cfg.write_text(
-            json.dumps({"kind": KIND_JARVIS_AGENTS, "discovery": "auto"},
+            json.dumps({"kind": KIND_AGENTS, "discovery": "auto"},
                        ensure_ascii=False, indent=2) + "\n",
             encoding='utf-8',
         )
@@ -98,13 +97,13 @@ def _resolve(raw: str, kind: str = "auto") -> tuple[str, Path | None]:
     """(app_id, app_dir). app_dir es None si no se encontró en ninguna raíz."""
     app_id  = paths.app_id_for(raw)
     app_dir = paths.resolve_app_dir(raw)
-    if app_dir is None and (kind == KIND_JARVIS_AGENTS or app_id == AGENTS_STUB_ID):
+    if app_dir is None and (kind == KIND_AGENTS or app_id == AGENTS_STUB_ID):
         app_dir = _bootstrap_agents_stub(app_id)
     return app_id, app_dir
 
 
 def _jmap(app_dir: Path) -> Path:
-    return app_dir / JMAP
+    return paths.out_dir(app_dir)
 
 
 def _read(path: Path) -> dict:
@@ -147,7 +146,7 @@ def status(raw: str):
             "app_id":  app_id,
             "error":   f"'{app_id}' no está en ninguna raíz conocida",
             "roots":   [str(r) for r in paths.apps_roots()],
-            "hint":    "pasá la ruta del proyecto, o definí JARVIS_MAP_APPS_DIR",
+            "hint":    "pasá la ruta del proyecto, o definí MAPEALO_APPS_DIR",
         }))
         return
     jmap    = _jmap(app_dir)
@@ -316,10 +315,10 @@ def _generate_wordpress_remote(app_dir: Path, depth: str, is_upgrade: bool, app_
     return generate_wp_remote(app_dir, depth=depth, app_display=app_display)
 
 
-def _generate_jarvis_agents(app_dir: Path, depth: str, is_upgrade: bool, app_display: str) -> tuple:
-    """Pipeline jarvis-agents (ecosistema de agentes Jarvis) — retorna (graph, detail, stack, count)."""
-    from analyzer.jarvis_agents import generate_jarvis_agents
-    return generate_jarvis_agents(app_dir, depth=depth, app_display=app_display)
+def _generate_agents(app_dir: Path, depth: str, is_upgrade: bool, app_display: str) -> tuple:
+    """Pipeline de ecosistemas de agentes — retorna (graph, detail, stack, count)."""
+    from analyzer.agents import generate_agents
+    return generate_agents(app_dir, depth=depth, app_display=app_display)
 
 
 def _generate_nextjs(app_dir: Path, depth: str, is_upgrade: bool, app_display: str) -> tuple:
@@ -337,7 +336,7 @@ def generate(raw: str, depth: str, force: bool, kind: str = "auto") -> dict:
         return {
             "error": f"App '{app_id}' no encontrada",
             "roots": [str(r) for r in paths.apps_roots()],
-            "hint":  "pasá la ruta del proyecto, o definí JARVIS_MAP_APPS_DIR",
+            "hint":  "pasá la ruta del proyecto, o definí MAPEALO_APPS_DIR",
         }
 
     jmap     = _jmap(app_dir)
@@ -347,13 +346,16 @@ def generate(raw: str, depth: str, force: bool, kind: str = "auto") -> dict:
     if kind == "auto":
         # Preferir el kind ya registrado en meta para evitar flapping si la
         # heurística cambia; sino inferir.
-        # `jarvis-map.json` manda sobre el meta: es la forma de corregir un kind
+        # `mapealo.json` manda sobre el meta: es la forma de corregir un kind
         # mal inferido (whitetec-web quedó como python por sus scripts .py).
-        kind = load_config(app_dir).get("kind") or existing.get("kind") or detect_kind(app_dir)
+        kind = normalize_kind(
+            load_config(app_dir).get("kind") or existing.get("kind") or detect_kind(app_dir)
+        )
         # Si la heurística no encontró nada concluyente, asumir python:
         # preserva el comportamiento pre-v1.4 y evita 500 en apps vacías.
         if kind == "unknown":
             kind = KIND_PYTHON
+    kind = normalize_kind(kind)
     if kind not in VALID_KINDS:
         return {"error": f"kind no soportado: {kind!r} (válidos: {sorted(VALID_KINDS)})"}
 
@@ -370,8 +372,8 @@ def generate(raw: str, depth: str, force: bool, kind: str = "auto") -> dict:
             )
         except Exception as e:
             return {"error": f"WordPress remoto falló: {e}"}
-    elif kind == KIND_JARVIS_AGENTS:
-        fresh_graph, detail, stack, components_count = _generate_jarvis_agents(
+    elif kind == KIND_AGENTS:
+        fresh_graph, detail, stack, components_count = _generate_agents(
             app_dir, depth, is_upgrade, app_display
         )
     elif kind == KIND_NEXTJS:
@@ -434,7 +436,8 @@ def main():
     parser.add_argument("--depth",  choices=["basico", "profundo"], default="basico")
     parser.add_argument("--force",  action="store_true")
     parser.add_argument("--status", action="store_true")
-    parser.add_argument("--kind",   choices=["auto", KIND_PYTHON, KIND_WORDPRESS, KIND_WORDPRESS_REMOTE, KIND_JARVIS_AGENTS, KIND_NEXTJS], default="auto")
+    parser.add_argument("--kind",   choices=["auto", KIND_PYTHON, KIND_WORDPRESS, KIND_WORDPRESS_REMOTE, KIND_AGENTS, KIND_NEXTJS,
+                                 "jarvis-agents"], default="auto")
     args = parser.parse_args()
 
     if args.roots:

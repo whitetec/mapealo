@@ -39,7 +39,7 @@ def _build_ssh_cmd(ssh_cfg: dict, wp_args: list) -> list:
     required = ("host", "user", "wp_path")
     missing  = [k for k in required if not ssh_cfg.get(k)]
     if missing:
-        raise WPRemoteError(f"ssh.{missing[0]} faltante en jarvis-map.json")
+        raise WPRemoteError(f"ssh.{missing[0]} faltante en mapealo.json")
 
     ssh_argv = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
                 "-o", "StrictHostKeyChecking=accept-new"]

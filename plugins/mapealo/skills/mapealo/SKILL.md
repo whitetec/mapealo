@@ -5,7 +5,7 @@ description: Genera o actualiza el mapa de arquitectura de un proyecto, o del ec
 
 # mapealo - mapa de arquitectura
 
-Analiza un proyecto y genera los archivos `.jarvis-map/` que consume el
+Analiza un proyecto y genera los archivos `.mapealo/` que consume el
 visualizador. Mapea dos cosas distintas:
 
 - **Un proyecto**: Python (Flask / FastAPI), Next.js o WordPress.
@@ -40,7 +40,7 @@ Leé el argumento del usuario:
 |---|---|
 | un nombre (`anubis`) | el nombre tal cual |
 | una ruta (`~/dev/mi-app`, `.`) | la ruta tal cual |
-| "mis agentes", "el ecosistema", nada claro pero habla de agentes/skills/plugins | `agentes --kind jarvis-agents` |
+| "mis agentes", "el ecosistema", nada claro pero habla de agentes/skills/plugins | `agentes --kind agents` |
 | nada | ver abajo |
 
 Si no pasó argumento, mostrale qué hay disponible antes de preguntar:
@@ -51,7 +51,7 @@ python3 "$ENGINE/mapealo.py" --roots
 
 Devuelve JSON con las raíces detectadas y los proyectos visibles. Presentale
 esa lista y que elija. Si `roots` viene vacío, no hay ninguna raíz reconocible:
-pedile la ruta del proyecto, o que defina `JARVIS_MAP_APPS_DIR`.
+pedile la ruta del proyecto, o que defina `MAPEALO_APPS_DIR`.
 
 ## Paso 2 - verificar estado
 
@@ -112,7 +112,7 @@ python3 "$ENGINE/mapealo.py" <objetivo> --depth profundo  --force
 ```bash
 curl -s --max-time 2 http://localhost:17433/api/apps > /dev/null 2>&1 || \
   nohup python3 -m uvicorn app:app --host 127.0.0.1 --port 17433 \
-    --app-dir "$ENGINE" > /tmp/jarvis-map.log 2>&1 &
+    --app-dir "$ENGINE" > /tmp/mapealo.log 2>&1 &
 sleep 2
 xdg-open "http://localhost:17433/?app=<objetivo>" 2>/dev/null || \
   open      "http://localhost:17433/?app=<objetivo>" 2>/dev/null || \
@@ -132,10 +132,10 @@ Si el navegador no abre solo, pasale la URL al usuario en texto.
 
 ## Qué no hacer
 
-- **No editar a mano** los archivos de `.jarvis-map/` (`graph.json`,
+- **No editar a mano** los archivos de `.mapealo/` (`graph.json`,
   `detail.json`, `meta.json`). Son artefactos generados: si algo sale mal, se
   corrige el analizador y se regenera, no el output.
-- `.jarvis-map/` es del visualizador, no documentación del proyecto. Si el
+- `.mapealo/` es del visualizador, no documentación del proyecto. Si el
   proyecto está en git, conviene agregarlo al `.gitignore`.
 - No asumas rutas del autor del plugin: todo se resuelve con `$ENGINE` y con
   `--roots`.
@@ -144,11 +144,11 @@ Si el navegador no abre solo, pasale la URL al usuario en texto.
 
 Por orden de precedencia:
 
-1. `JARVIS_MAP_APPS_DIR` (lista separada por `:`)
-2. `~/.config/jarvis-map/config.json` → `{"apps_dirs": ["..."]}`
+1. `MAPEALO_APPS_DIR` (lista separada por `:`)
+2. `~/.config/mapealo/config.json` → `{"apps_dirs": ["..."]}`
 3. autodetección: `~/proyectos`, `~/projects`, `~/dev`, `~/src`, `~/code`,
-   `~/repos`, `~/work`, `~/workspace`, `~/jarvis-apps/apps` y variantes
-4. el workspace propio del tool (`~/.local/share/jarvis-map/apps`), donde vive
+   `~/repos`, `~/work`, `~/workspace` y variantes
+4. el workspace propio del tool (`~/.local/share/mapealo/apps`), donde vive
    el stub del ecosistema de agentes
 
 Una ruta explícita siempre gana sobre todo esto.

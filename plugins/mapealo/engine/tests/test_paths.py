@@ -135,6 +135,66 @@ class TestResolucion(_HomeFixture):
         self.assertEqual(apps[0][1], a)
 
 
+class TestNombresLegacy(_HomeFixture):
+    """El motor se llamaba `jarvis-map` antes de publicarse como `mapealo`.
+    Lo que el usuario ve usa el nombre nuevo; lo viejo se sigue leyendo para no
+    invalidar los mapas y configs ya generados."""
+
+    def test_out_dir_nuevo_por_defecto(self):
+        d = self.mkproject("jarvis-apps/apps/limpia")
+        self.assertEqual(paths.out_dir(d).name, ".mapealo")
+
+    def test_out_dir_conserva_el_viejo_si_existe(self):
+        d = self.mkproject("jarvis-apps/apps/vieja")
+        (d / ".jarvis-map").mkdir()
+        self.assertEqual(paths.out_dir(d), d / ".jarvis-map")
+
+    def test_out_dir_prefiere_el_nuevo_si_estan_los_dos(self):
+        d = self.mkproject("jarvis-apps/apps/ambas")
+        (d / ".jarvis-map").mkdir()
+        (d / ".mapealo").mkdir()
+        self.assertEqual(paths.out_dir(d), d / ".mapealo")
+
+    def test_config_de_proyecto_acepta_los_dos_nombres(self):
+        d = self.mkproject("jarvis-apps/apps/conf")
+        self.assertIsNone(paths.project_config(d))
+        (d / "jarvis-map.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(paths.project_config(d).name, "jarvis-map.json")
+        (d / "mapealo.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(paths.project_config(d).name, "mapealo.json")
+
+    def test_env_var_vieja_sigue_valiendo(self):
+        externa = self.tmp / "por-env-vieja"
+        externa.mkdir()
+        os.environ["JARVIS_MAP_APPS_DIR"] = str(externa)
+        self.assertIn(externa, paths.apps_roots())
+
+    def test_env_var_nueva_gana_sobre_la_vieja(self):
+        nueva, vieja = self.tmp / "nueva", self.tmp / "vieja"
+        nueva.mkdir(); vieja.mkdir()
+        os.environ["MAPEALO_APPS_DIR"]     = str(nueva)
+        os.environ["JARVIS_MAP_APPS_DIR"]  = str(vieja)
+        try:
+            self.assertEqual(paths.apps_roots()[0], nueva)
+            self.assertNotIn(vieja, paths.apps_roots())
+        finally:
+            os.environ.pop("MAPEALO_APPS_DIR", None)
+
+    def test_user_config_cae_al_viejo_si_es_el_que_esta(self):
+        viejo = self.tmp / ".config/jarvis-map/config.json"
+        viejo.parent.mkdir(parents=True)
+        viejo.write_text("{}", encoding="utf-8")
+        self.assertEqual(paths.user_config(), viejo)
+
+    def test_workspace_cae_al_viejo_si_es_el_que_esta(self):
+        viejo = self.tmp / ".local/share/jarvis-map/apps"
+        viejo.mkdir(parents=True)
+        self.assertEqual(paths.workspace_root(), viejo)
+
+    def test_workspace_nuevo_por_defecto(self):
+        self.assertEqual(paths.workspace_root().parent.name, "mapealo")
+
+
 class TestClaudeHome(_HomeFixture):
 
     def test_default(self):

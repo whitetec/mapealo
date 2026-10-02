@@ -1,4 +1,4 @@
-"""Analyzer jarvis-agents — entry point: generate_jarvis_agents(app_dir, depth, app_display).
+"""Analyzer de ecosistemas de agentes — entry point: generate_agents().
 
 Mapea un ecosistema de agentes. La fuente vive fuera de `app_dir`, y hay dos:
 
@@ -8,26 +8,26 @@ Mapea un ecosistema de agentes. La fuente vive fuera de `app_dir`, y hay dos:
             commands, plugins, MCP, hooks, CLAUDE.md). Ver `discovery.py`.
 
 Se elige sola: si hay fichas parseables, `fichas`; si no, `auto`. Forzable con
-`"discovery": "auto"|"fichas"` en `jarvis-map.json`. En modo `auto`, las fichas
+`"discovery": "auto"|"fichas"` en `mapealo.json`. En modo `auto`, las fichas
 que existan enriquecen los agentes detectados en vez de reemplazarlos.
 
-`app_dir` solo contiene `jarvis-map.json` con los paths origen y APP.md/CHANGELOG.md
+`app_dir` solo contiene `mapealo.json` con los paths origen y APP.md/CHANGELOG.md
 para que el resto de la app se comporte como cualquier otra del catálogo.
 """
 import re
 from pathlib import Path
 
 from analyzer import load_config
-from analyzer.jarvis_agents.parser    import parse_fichas
-from analyzer.jarvis_agents.perfil    import parse_perfil
-from analyzer.jarvis_agents.builder   import (
+from analyzer.agents.parser    import parse_fichas
+from analyzer.agents.perfil    import parse_perfil
+from analyzer.agents.builder   import (
     build_agents_graph, CC_PILLAR_META, CC_PILLAR_ORDER,
 )
-from analyzer.jarvis_agents import discovery
+from analyzer.agents import discovery
 
 
-def generate_jarvis_agents(app_dir: Path, depth: str, app_display: str) -> tuple:
-    """Pipeline jarvis-agents. Retorna (graph, detail, stack, count)."""
+def generate_agents(app_dir: Path, depth: str, app_display: str) -> tuple:
+    """Pipeline de agentes. Retorna (graph, detail, stack, count)."""
     cfg         = load_config(app_dir)
     agentes_dir = _expand(cfg.get("agentes_dir", "~/jarvis-director/agentes/"))
     fichas      = parse_fichas(agentes_dir)
@@ -92,7 +92,7 @@ def _generate_fichas(fichas: list, depth: str, app_display: str) -> tuple:
 
     graph = build_agents_graph(components, pillar_map, deps, app_display)
     graph["artifacts"] = []
-    return graph, detail, "jarvis-agents", len(components)
+    return graph, detail, "agents-fichas", len(components)
 
 
 # ─── pipeline autodetectado ─────────────────────────────────────────────────

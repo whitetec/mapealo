@@ -1,6 +1,6 @@
 """Autodetección del ecosistema de agentes.
 
-El kind `jarvis-agents` nació leyendo las fichas de `~/jarvis-director/agentes/`.
+El kind `agents` nació leyendo unas fichas con formato propio del autor.
 Esa es una convención del autor y no existe en otra máquina. Acá el ecosistema
 se descubre por las convenciones de Claude Code, que sí son universales:
 
@@ -276,7 +276,7 @@ def scan_claude_md_dirs(dirs: list[Path]) -> list[dict]:
     un agente; en uno normal son los proyectos con instrucciones.
 
     Recibe la lista ya armada en vez de un home: los proyectos del operador
-    pueden estar en el home (`~/jarvis-dev`) o un nivel más abajo
+    pueden estar en el home (`~/mi-agente`) o un nivel más abajo
     (`~/src/api-gateway`), y las dos formas cuentan igual.
     """
     out = []

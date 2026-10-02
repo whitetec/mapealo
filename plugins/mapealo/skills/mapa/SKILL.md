@@ -6,7 +6,7 @@ description: Abre el visualizador interactivo de arquitectura en el navegador. U
 # mapa - visualizador de arquitectura
 
 Servidor local en el puerto 17433 que sirve un grafo interactivo. Los datos los
-genera la skill `mapealo` y viven en `<proyecto>/.jarvis-map/`.
+genera la skill `mapealo` y viven en `<proyecto>/.mapealo/`.
 
 ## Paso 0 - ubicar el motor
 
@@ -24,7 +24,7 @@ Si ninguna resuelve, el plugin está mal instalado: decíselo al usuario y pará
 ```bash
 curl -s --max-time 2 http://localhost:17433/api/apps > /dev/null 2>&1 || \
   nohup python3 -m uvicorn app:app --host 127.0.0.1 --port 17433 \
-    --app-dir "$ENGINE" > /tmp/jarvis-map.log 2>&1 &
+    --app-dir "$ENGINE" > /tmp/mapealo.log 2>&1 &
 sleep 2
 ```
 
@@ -66,7 +66,7 @@ que no hace falta volver a la terminal.
 ## Notas
 
 - El puerto 17433 es exclusivo de este visualizador.
-- Log del servidor: `/tmp/jarvis-map.log`.
+- Log del servidor: `/tmp/mapealo.log`.
 - El backend valida el `app_id` contra una allowlist: la superficie HTTP acepta
   ids, nunca rutas.
 - Vistas disponibles según el proyecto: Estructura (por defecto), Secciones

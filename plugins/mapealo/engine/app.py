@@ -1,4 +1,4 @@
-"""jarvis-map — servidor FastAPI en puerto 17433."""
+"""mapealo — servidor FastAPI del visualizador, en el puerto 17433."""
 import json
 import re
 import shutil
@@ -15,10 +15,9 @@ import puente
 from analyzer import detect_kind
 from version import TOOL_VERSION
 
-app = FastAPI(title="jarvis-map", version="2.0")
+app = FastAPI(title="mapealo", version="2.0")
 
 _THIS_DIR = Path(__file__).resolve().parent
-JMAP_DIR  = ".jarvis-map"
 
 _HEADING    = re.compile(r'^# (.+)$', re.MULTILINE)
 _CL_DATE    = re.compile(r'###?\s*(\d{4}-\d{2}-\d{2})')
@@ -44,7 +43,7 @@ def _safe_app_dir(app_id: str) -> Path:
 
 
 def _jmap(app_dir: Path) -> Path:
-    return app_dir / JMAP_DIR
+    return paths.out_dir(app_dir)
 
 
 def _display_name(app_dir: Path) -> str:
@@ -85,7 +84,7 @@ def list_apps():
             stale     = stale_cl or stale_ver
 
         # kind: si hay meta usar el grabado; sino inferir vía detect_kind
-        # (lee jarvis-map.json si existe). Nunca devolver "unknown" al frontend.
+        # (lee mapealo.json si existe). Nunca devolver "unknown" al frontend.
         kind = meta.get("kind")
         if not kind:
             inferred = detect_kind(d)
@@ -115,7 +114,7 @@ def get_graph(app: str = Query(...)):
     if not jmap.exists():
         raise HTTPException(
             404,
-            f"Sin mapa para '{app}'. Invocá /jarvis-mapealo {app} para generarlo."
+            f"Sin mapa para '{app}'. Invocá /mapealo {app} para generarlo."
         )
 
     graph  = _read_json(jmap / "graph.json")
@@ -150,8 +149,9 @@ def regenerate(
     _safe_app_dir(app)
     if depth not in ("basico", "profundo"):
         raise HTTPException(400, "depth inválido (basico|profundo)")
-    if kind not in ("auto", "python", "wordpress", "wordpress-remote", "jarvis-agents", "nextjs"):
-        raise HTTPException(400, "kind inválido (auto|python|wordpress|wordpress-remote|jarvis-agents|nextjs)")
+    if kind not in ("auto", "python", "wordpress", "wordpress-remote", "agents", "nextjs",
+                    "jarvis-agents"):
+        raise HTTPException(400, "kind inválido (auto|python|wordpress|wordpress-remote|agents|nextjs)")
 
     from mapealo import generate
     try:

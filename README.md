@@ -44,8 +44,8 @@ skills y plugins", "qué MCP tengo conectados", "abrí el mapa".
 
 **Proyectos**, por orden de precedencia:
 
-1. `JARVIS_MAP_APPS_DIR` (lista separada por `:`)
-2. `~/.config/jarvis-map/config.json` → `{"apps_dirs": ["/ruta/a/mis/repos"]}`
+1. `MAPEALO_APPS_DIR` (lista separada por `:`)
+2. `~/.config/mapealo/config.json` → `{"apps_dirs": ["/ruta/a/mis/repos"]}`
 3. autodetección: `~/proyectos`, `~/projects`, `~/dev`, `~/src`, `~/code`,
    `~/repos`, `~/work`, `~/workspace` y variantes
 4. una ruta explícita, que siempre gana
@@ -74,9 +74,9 @@ configuración.
 
 ## Dónde escribe
 
-- `<proyecto>/.jarvis-map/` - los datos del grafo. Si el proyecto está en git,
+- `<proyecto>/.mapealo/` - los datos del grafo. Si el proyecto está en git,
   conviene agregarlo al `.gitignore`.
-- `~/.local/share/jarvis-map/apps/agentes/` - el mapa del ecosistema, que no
+- `~/.local/share/mapealo/apps/agentes/` - el mapa del ecosistema, que no
   pertenece a ningún proyecto.
 
 Nada más. El análisis es local: lee tus archivos y los deja en tu disco, no

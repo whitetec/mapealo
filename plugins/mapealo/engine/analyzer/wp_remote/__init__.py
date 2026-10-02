@@ -4,7 +4,7 @@ Analyzer WordPress remoto — entry point: generate_wp_remote(app_dir, depth, ap
 Combina:
   - Inventario remoto vía WP-CLI/SSH (plugins, themes, CPTs, taxonomías)
   - Parser PHP local (analyzer.wp.parser) sobre dirs declarados en
-    `local_php_dirs` del jarvis-map.json — útil para mapear mu-plugins
+    `local_php_dirs` del mapealo.json — útil para mapear mu-plugins
     que viven en el repo del agente sin tocar el VPS.
 """
 from pathlib import Path

@@ -2,7 +2,7 @@ import unittest
 
 from analyzer.builder import GROUP_ROOT, build_graph, build_groups, group_of
 from analyzer.wp.builder import build_wp_graph
-from analyzer.jarvis_agents.builder import build_agents_graph
+from analyzer.agents.builder import build_agents_graph
 
 
 def _mods(*rels):
@@ -54,7 +54,7 @@ class TestGraphEmiteGroups(unittest.TestCase):
         self.assertIn("plugins", ids)
         self.assertEqual(g["children"][0]["group"], "plugins")
 
-    def test_jarvis_agents(self):
+    def test_agents(self):
         comps = [{"id": "jarvis-dev", "label": "WP-Copilot"}]
         g = build_agents_graph(comps, {"jarvis-dev": "T"}, [], "agentes")
         ids = {gr["id"] for gr in g["groups"]}
@@ -69,7 +69,7 @@ class TestSinNodosFantasma(unittest.TestCase):
         g = build_graph(_mods(
             "analyzer/builder.py",
             "analyzer/wp/builder.py",
-            "analyzer/jarvis_agents/builder.py",
+            "analyzer/agents/builder.py",
         ), {}, [], "demo")
         ids = [c["id"] for c in g["children"]]
         self.assertEqual(len(ids), 3)
